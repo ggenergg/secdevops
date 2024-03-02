@@ -1,0 +1,117 @@
+IDENTITY SERVICES ENGINE
+
+#Gawa muna CSR
+hostname: routerM
+username: admin
+password: password
+MGMT INT: Gi1
+
+(while CSR Setup)
+-change 1st NetAdapter to NAT
+
+(after CSR Setup)
+conf t
+int gi1
+ip add 192.168.108.100 255.255.255.0
+no shut
+
+
+
+
+(ISE Gawa Proper)
+
+Administration > System > Deployment
+
+(under Deployment Nodes) > ISE-M (yung sinet from OVA)
+
+Policy Service > Enable Device Admin Service (check) > SAVE
+
+
+
+WORK CENTERS > Device Administration > Network Resources > Add 
+(set the following):
+	Name: 	CSR1
+	IP: 	192.168.108.100
+	Model:	Unknown
+	S/W:	Unknown
+	IPSEC:	No
+	TACACS > Shared Secret: C1sc0123
+
+		SUBMIT!!!
+
+
+WORK CENTERS – DEVICE ADMINISTRATION – USER IDENTITY GROUPS
+	ADD+ > Name: ALL-ADMIN-DEVICE > Submit!!!
+
+
+
+WORK CENTERS – DEVICE ADMINISTRATION - IDENTITIES > ADD+
+	Name:		ccnpM
+	Password Type:	Internal Users
+	Login/Enable:	C1sc0123
+	:
+	:
+	:
+	User Groups:	ALL-ADMIN-DEVICE
+		Submit!!!
+
+WORK CENTERS – DEVICE ADMINISTRATION - POLICY ELEMENTS
+(to the left...) Results > TACACS COMMAND SETS > Add+
+	Name: ALL-DEVICE-ADMIN
+	Permit any command... CHECK
+		SUBMIT!!!
+
+(to the left...) TACACS Profiles > Add+\
+	Name: 		ADD_DEVICE_ADMIN
+	Default Priv:	15
+	Maximum Priv:	15
+		Submit!!!
+
+
+WORK CENTERS – DEVICE ADMINISTRATION - DEVICE ADMIN POLICY SETS+ > New Policy Set+
+	(click-click) Attribute: TACACS-Users
+					In	Network Access:UserName
+				USE!!!
+	Allowed Protocols: 	Default Device Admin
+		SAVE!!!		> (click gt> sign for more...)
+	Authentication Policy 1
+		TACACS:User
+			Equals
+			Network Access: UserName
+			Use!!!
+		+ Internal Users
+	Authorization Policy 1
+		v + InternalUser: Identity Group
+			Equals
+			User Identity Groups: ALL-ADMIN-DEVICE
+				Use!!!
+		ALL-DEVICE-ADMIN
+			Save!!!
+
+
+
+@CSR VM:
+
+config t
+aaa new-model
+tacacs-server host 192.168.108.7
+tacacs-server key C1sc0123
+aaa authentication login default group tacacs+ local
+do debug aaa authentication
+do debug tacacs
+end
+conf t
+enable secret pass
+service password-encryption
+end
+
+
+!Launch SecureCRT, QuickConnect via SSH2 - 192.168.108.100
+	user: CCNPm
+	pass: C1sc0123
+!!!credentials were set earlier from 
+!!!WORK CENTERS - DEVICE ADMINISTRATION - IDENTITIES
+
+				
+	
+	
