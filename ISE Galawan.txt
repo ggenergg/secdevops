@@ -16,28 +16,47 @@ ip add 192.168.108.100 255.255.255.0
 no shut
 
 
+============================
 
 
-(ISE Gawa Proper)
+(Windows Server)
+-Launch Powershell ISE and open the ntp.ps1 (this enables Windows Server as NTP Server)
+-launch DNS, follow the provided PDF guide (ccnpM.com) ==> where M is the monitor number
+
+
+(ISE Deployment)
+-Open the OVA file: ISE-2.6.0.156-virtual-SNS3615-SNS3655-200.ova
+-Deploy the VM to the drive that has the largest free space (must be more than 64GB free space)
+-Set the following entries upon SETUP:
+-Upon reboot, ping the IP of ISE, if it pings launch the GUI via browse using the https://ise.ccnp[M].com (or its IP)
+-Full Initialization of the ISE take around 10-15 minutes (or even more), you may login
+   in the ISE VM and type in the cli "show application status ise"
+-You may try in further minutes until the ISE GUI is accessed.
+
+
+===========================
+
+
+#ISE Gawa Proper
 
 Administration > System > Deployment
 
 (under Deployment Nodes) > ISE-M (yung sinet from OVA)
 
-Policy Service > Enable Device Admin Service (check) > SAVE
+(@3rd section) Policy Service > Enable Device Admin Service (check) > SAVE
 
 
 
-WORK CENTERS > Device Administration > Network Resources > Add 
+(@menu) WORK CENTERS > Device Administration > Network Resources > Add 
 (set the following):
 	Name: 	CSR1
 	IP: 	192.168.108.100
 	Model:	Unknown
 	S/W:	Unknown
 	IPSEC:	No
-	TACACS > Shared Secret: C1sc0123
+	TACACS (check) > Shared Secret: C1sc0123
 
-		SUBMIT!!!
+			SUBMIT!!!
 
 
 WORK CENTERS – DEVICE ADMINISTRATION – USER IDENTITY GROUPS
@@ -52,7 +71,7 @@ WORK CENTERS – DEVICE ADMINISTRATION - IDENTITIES > ADD+
 	:
 	:
 	:
-	User Groups:	ALL-ADMIN-DEVICE
+	User Groups (below):	ALL-ADMIN-DEVICE
 		Submit!!!
 
 WORK CENTERS – DEVICE ADMINISTRATION - POLICY ELEMENTS
@@ -61,21 +80,24 @@ WORK CENTERS – DEVICE ADMINISTRATION - POLICY ELEMENTS
 	Permit any command... CHECK
 		SUBMIT!!!
 
-(to the left...) TACACS Profiles > Add+\
-	Name: 		ADD_DEVICE_ADMIN
+(to the left...) TACACS Profiles > Add+
+	Name: 		ALL_DEVICE_ADMIN
 	Default Priv:	15
 	Maximum Priv:	15
 		Submit!!!
 
 
-WORK CENTERS – DEVICE ADMINISTRATION - DEVICE ADMIN POLICY SETS+ > New Policy Set+
+WORK CENTERS – DEVICE ADMINISTRATION - DEVICE ADMIN POLICY SETS+ > New Policy Set +  (Name: Cisco Devices)
 	(click-click) Attribute: TACACS-Users
-					In	Network Access:UserName
+					In  > !!! > Network Access:UserName
 				USE!!!
+	
+	(select from list)
 	Allowed Protocols: 	Default Device Admin
 		SAVE!!!		> (click gt> sign for more...)
+
 	Authentication Policy 1
-		TACACS:User
+		TACACS:User IN Network Access...
 			Equals
 			Network Access: UserName
 			Use!!!
@@ -90,7 +112,7 @@ WORK CENTERS – DEVICE ADMINISTRATION - DEVICE ADMIN POLICY SETS+ > New Policy 
 
 
 
-@CSR VM:
+@CSR VM (type manually, sheet pag scripting):
 
 config t
 aaa new-model
@@ -106,11 +128,23 @@ service password-encryption
 end
 
 
+do test aaa group tacacs+ <username sa ISE> <password sa ISE> legacy
+
+(if na-setup properly, eto ang lilitaw...):
+	router12#test aaa group tacacs+ ccnp12 C1sc0123 legacy
+	Attempting authentication test to server-group tacacs+ using tacacs+
+	User was successfully authenticated.
+
+
+
+
 !Launch SecureCRT, QuickConnect via SSH2 - 192.168.108.100
 	user: CCNPm
 	pass: C1sc0123
+
 !!!credentials were set earlier from 
 !!!WORK CENTERS - DEVICE ADMINISTRATION - IDENTITIES
+	- try gawa another user, pero different password sa login and enable.
 
 				
 	
